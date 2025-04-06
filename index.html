@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuperBee - Drone Parts Inventory</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
+    <style>
+        :root {
+            --sidebar-width: 250px;
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --background-color: #ecf0f1;
+            --text-color: #2c3e50;
+            --card-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            perspective: 1000px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+            position: relative;
+            z-index: 1;
+            transform-style: preserve-3d;
+            animation: headerFloat 1s ease-out forwards;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-center {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        header h1 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .menu-button {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .menu-button:hover {
+            transform: scale(1.1);
+        }
+
+        @keyframes headerFloat {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .main-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 2rem;
+        }
+
+        .option-card {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            transform-style: preserve-3d;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.1), rgba(231, 76, 60, 0.1));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .option-card:hover {
+            transform: translateY(-10px) rotateX(5deg);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+
+        .option-card:hover::before {
+            opacity: 1;
+        }
+
+        .option-card h2 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .logs-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+        }
+
+        .logs-section h2 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .form-container {
+            display: none;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .activities-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .activities-table th,
+        .activities-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .activities-table th {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            font-weight: bold;
+        }
+
+        .activities-table tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .activity-type {
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .activity-type.registration {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .activity-type.checkout {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .timestamp {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: 0.5s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        .auth-status {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            color: white;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .barcode-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            margin: 1rem 0;
+            box-shadow: var(--card-shadow);
+        }
+
+        .scanner-container {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        #interactive.viewport {
+            position: relative;
+            width: 100%;
+            height: 300px;
+        }
+
+        #interactive.viewport > canvas, #interactive.viewport > video {
+            max-width: 100%;
+            width: 100%;
+        }
+
+        page {
+            transition: opacity 0.3s ease-in-out;
+        }
+        
+        .back-button {
+            margin-top: 1rem;
+            background: var(--accent-color);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .back-button::before {
+            content: '←';
+            font-size: 1.2em;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+            transform-style: preserve-3d;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateZ(10px);
+        }
+        
+        .stat-card i {
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+            margin: 0.5rem 0;
+        }
+        
+        .parts-list {
+            margin-top: 1rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+        }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: white;
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 500px;
+        position: relative;
+        transform: translateY(-20px);
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    .modal.active {
+        display: flex;
+    }
+
+    .modal.active .modal-content {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -250px;
+        width: var(--sidebar-width);
+        height: 100vh;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        padding: 1rem;
+        transition: transform 0.3s ease;
+        z-index: 1001;
+        box-shadow: var(--card-shadow);
+    }
+
+    .sidebar.active {
+        transform: translateX(var(--sidebar-width));
+    }
+
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+    }
+
+    .close-sidebar {
+        background: transparent;
+        border: none;
+        color: white;
+        font-size: 1.2rem;
+        cursor: pointer;
+        padding: 0.5rem;
+    }
+
+    .sidebar-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .sidebar-nav a {
+        color: white;
+        text-decoration: none;
+        padding: 1rem;
+        border-radius: 4px;
+        transition: background 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        font-size: 1.1rem;
+    }
+
+    .sidebar-nav a:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        z-index: 1000;
+    }
+
+    .overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+</style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-drone"></i> Menu</h2>
+            <button class="close-sidebar"><i class="fas fa-times"></i></button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#" onclick="goToHome()"><i class="fas fa-home"></i> Home</a>
+            <a href="#" onclick="showInventoryList()"><i class="fas fa-warehouse"></i> Inventory List</a>
+            <a href="#" onclick="showRecentActivities()"><i class="fas fa-history"></i> Recent Activities</a>
+        </nav>
+    </div>
+    <div class="overlay"></div>
+    <header>
+        <div class="header-center">
+            <button class="menu-button"><i class="fas fa-bars"></i></button>
+            <h1><i class="fas fa-drone"></i> SuperBee Drone Parts Inventory</h1>
+        </div>
+    </header>
+
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <h2>Authorization Required</h2>
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" required>
+            </div>
+            <button onclick="login()">Login</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="dashboard">
+            <div class="stat-card">
+                <i class="fas fa-boxes fa-2x"></i>
+                <h3>Total Parts</h3>
+                <div id="totalParts" class="stat-value">0</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-sign-in-alt fa-2x"></i>
+                <h3>Checked In</h3>
+                <div id="checkedInParts" class="stat-value">0</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-sign-out-alt fa-2x"></i>
+                <h3>Checked Out</h3>
+                <div id="checkedOutParts" class="stat-value">0</div>
+            </div>
+        </div>
+
+        <div class="main-options">
+            <div class="option-card" onclick="window.location.href='register.html'">
+                <h2>Register Parts</h2>
+                <p>Add new parts to inventory</p>
+            </div>
+            <div class="option-card" onclick="window.location.href='checkout.html'">
+                <h2>Checkout Parts</h2>
+                <p>Remove parts from inventory</p>
+            </div>
+            <div class="option-card" onclick="window.location.href='purchaseorder.html'">
+                <h2>Purchase Order</h2>
+                <p>View and manage purchase orders</p>
+            </div>
+        </div>
+
+        <div class="logs-section">
+            <h2>Recent Activities</h2>
+            <table class="activities-table">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Action</th>
+                        <th>Part Name</th>
+                        <th>Quantity</th>
+                        <th>User</th>
+                    </tr>
+                </thead>
+                <tbody id="recentActivitiesTableBody"></tbody>
+            </table>
+        </div>
+
+        <div id="registerForm" class="form-container">
+            <h2>Register New Parts</h2>
+            <form id="partRegistrationForm">
+                <div class="form-group">
+                    <label for="partName">Part Name:</label>
+                    <input type="text" id="partName" required>
+                </div>
+                <div class="form-group">
+                    <label for="partType">Part Type:</label>
+                    <select id="partType" required>
+                        <option value="">Select Type</option>
+                        <option value="motor">Motor</option>
+                        <option value="frame">Frame</option>
+                        <option value="battery">Battery</option>
+                        <option value="controller">Controller</option>
+                        <option value="propeller">Propeller</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="quantity">Quantity:</label>
+                    <input type="number" id="quantity" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label>Barcode:</label>
+                    <div class="barcode-container">
+                        <svg id="barcodeDisplay"></svg>
+                        <div id="barcodeText"></div>
+                    </div>
+                </div>
+                <button type="submit">Register Part</button>
+                <button type="button" onclick="printBarcode()" class="secondary-button">Print Barcode</button>
+            </form>
+        </div>
+
+        <div id="checkoutForm" class="form-container">
+            <h2>Check Out Parts</h2>
+            <div class="checkout-options">
+                <button onclick="showCreateDrone()" class="option-button">Create a New Drone</button>
+                <button onclick="showRequiredParts()" class="option-button">Required Parts</button>
+            </div>
+        </div>
+
+        <div id="createDroneForm" class="form-container" style="display: none;">
+            <h2>Create a New Drone</h2>
+            <form>
+                <div class="form-group">
+                    <label for="droneSize">Drone Size:</label>
+                    <select id="droneSize" required>
+                        <option value="">Select Size</option>
+                        <option value="small">Small (under 250g)</option>
+                        <option value="medium">Medium (250g - 1kg)</option>
+                        <option value="large">Large (over 1kg)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="droneType">Drone Type:</label>
+                    <select id="droneType" required>
+                        <option value="">Select Type</option>
+                        <option value="racing">Racing Drone</option>
+                        <option value="photography">Photography Drone</option>
+                        <option value="surveillance">Surveillance Drone</option>
+                    </select>
+                </div>
+                <button type="submit">Calculate Required Parts</button>
+                <div id="requiredPartsList" class="parts-list" style="display: none;"></div>
+                <button type="button" onclick="showCheckoutForm()" class="secondary-button">Back</button>
+            </form>
+        </div>
+
+        <div id="partCheckoutForm" class="form-container" style="display: none;">
+            <h2>Required Parts</h2>
+            <form>
+                <div class="form-group">
+                    <label for="checkoutPart">Select Part:</label>
+                    <select id="checkoutPart" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="checkoutQuantity">Quantity:</label>
+                    <input type="number" id="checkoutQuantity" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="checkoutReason">Reason for Checkout:</label>
+                    <input type="text" id="checkoutReason" required>
+                </div>
+                <button type="submit">Check Out</button>
+                <button type="button" onclick="showCheckoutForm()" class="secondary-button">Back</button>
+            </form>
+        </div>
+
+        <div id="scannerView" class="form-container">
+            <h2>Scan Barcode</h2>
+            <div class="scanner-container">
+                <div id="interactive" class="viewport"></div>
+            </div>
+            <div id="scanResult" class="barcode-container" style="display: none;">
+                <h3>Part Details</h3>
+                <div id="partDetails"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize storage
+        if (!localStorage.getItem('inventory')) {
+            localStorage.setItem('inventory', JSON.stringify([]));
+        }
+        if (!localStorage.getItem('activityLog')) {
+            localStorage.setItem('activityLog', JSON.stringify([]));
+        }
+        if (!localStorage.getItem('authorized')) {
+            document.getElementById('loginModal').classList.add('active');
+        }
+
+        // Drone parts configuration
+        const dronePartsConfig = {
+            small: {
+                racing: [
+                    { name: 'Mini Frame', quantity: 1 },
+                    { name: 'Small Motors', quantity: 4 },
+                    { name: 'Mini ESC', quantity: 4 },
+                    { name: 'Small Battery', quantity: 1 },
+                    { name: 'Mini Flight Controller', quantity: 1 }
+                ],
+                photography: [
+                    { name: 'Mini Frame', quantity: 1 },
+                    { name: 'Small Motors', quantity: 4 },
+                    { name: 'Mini ESC', quantity: 4 },
+                    { name: 'Small Battery', quantity: 1 },
+                    { name: 'Mini Flight Controller', quantity: 1 },
+                    { name: 'Small Camera', quantity: 1 }
+                ],
+                surveillance: [
+                    { name: 'Mini Frame', quantity: 1 },
+                    { name: 'Small Motors', quantity: 4 },
+                    { name: 'Mini ESC', quantity: 4 },
+                    { name: 'Small Battery', quantity: 2 },
+                    { name: 'Mini Flight Controller', quantity: 1 },
+                    { name: 'Small Camera', quantity: 1 }
+                ]
+            },
+            medium: {
+                racing: [
+                    { name: 'Medium Frame', quantity: 1 },
+                    { name: 'Medium Motors', quantity: 4 },
+                    { name: 'Standard ESC', quantity: 4 },
+                    { name: 'Medium Battery', quantity: 1 },
+                    { name: 'Standard Flight Controller', quantity: 1 }
+                ],
+                photography: [
+                    { name: 'Medium Frame', quantity: 1 },
+                    { name: 'Medium Motors', quantity: 4 },
+                    { name: 'Standard ESC', quantity: 4 },
+                    { name: 'Medium Battery', quantity: 1 },
+                    { name: 'Standard Flight Controller', quantity: 1 },
+                    { name: 'HD Camera', quantity: 1 },
+                    { name: 'Gimbal', quantity: 1 }
+                ],
+                surveillance: [
+                    { name: 'Medium Frame', quantity: 1 },
+                    { name: 'Medium Motors', quantity: 4 },
+                    { name: 'Standard ESC', quantity: 4 },
+                    { name: 'Medium Battery', quantity: 2 },
+                    { name: 'Standard Flight Controller', quantity: 1 },
+                    { name: 'HD Camera', quantity: 1 }
+                ]
+            },
+            large: {
+                racing: [
+                    { name: 'Large Frame', quantity: 1 },
+                    { name: 'Large Motors', quantity: 4 },
+                    { name: 'High-Power ESC', quantity: 4 },
+                    { name: 'Large Battery', quantity: 2 },
+                    { name: 'Advanced Flight Controller', quantity: 1 }
+                ],
+                photography: [
+                    { name: 'Large Frame', quantity: 1 },
+                    { name: 'Large Motors', quantity: 4 },
+                    { name: 'High-Power ESC', quantity: 4 },
+                    { name: 'Large Battery', quantity: 2 },
+                    { name: 'Advanced Flight Controller', quantity: 1 },
+                    { name: '4K Camera', quantity: 1 },
+                    { name: 'Professional Gimbal', quantity: 1 }
+                ],
+                surveillance: [
+                    { name: 'Large Frame', quantity: 1 },
+                    { name: 'Large Motors', quantity: 4 },
+                    { name: 'High-Power ESC', quantity: 4 },
+                    { name: 'Large Battery', quantity: 3 },
+                    { name: 'Advanced Flight Controller', quantity: 1 },
+                    { name: '4K Camera', quantity: 1 }
+                ]
+            }
+        };
+
+        function showCreateDrone() {
+            document.getElementById('checkoutForm').style.display = 'none';
+            document.getElementById('createDroneForm').style.display = 'block';
+            document.getElementById('partCheckoutForm').style.display = 'none';
+        }
+
+        function showRequiredParts() {
+            document.getElementById('checkoutForm').style.display = 'none';
+            document.getElementById('createDroneForm').style.display = 'none';
+            document.getElementById('partCheckoutForm').style.display = 'block';
+        }
+
+        function showCheckoutForm() {
+            document.getElementById('checkoutForm').style.display = 'block';
+            document.getElementById('createDroneForm').style.display = 'none';
+            document.getElementById('partCheckoutForm').style.display = 'none';
+        }
+
+        document.getElementById('createDroneForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const size = document.getElementById('droneSize').value;
+            const type = document.getElementById('droneType').value;
+            
+            if (size && type) {
+                const requiredParts = dronePartsConfig[size][type];
+                const partsList = document.getElementById('requiredPartsList');
+                partsList.innerHTML = '<h4>Required Parts:</h4><ul>' +
+                    requiredParts.map(part => 
+                        `<li>${part.name} - Quantity: ${part.quantity}</li>`
+                    ).join('') +
+                    '</ul>';
+                partsList.style.display = 'block';
+            }
+        });
+
+        // Authorization
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // Simple authorization (in real app, this should be server-side)
+            if (username && password) {
+                localStorage.setItem('authorized', username);
+                document.getElementById('loginModal').classList.remove('active');
+                document.getElementById('currentUser').textContent = username;
+                updateDashboard();
+            }
+        }
+
+        // Generate unique barcode
+        function generateBarcode() {
+            const date = new Date();
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+            return `SBA-${year}-${month}${day}-${random}`;
+        }
+
+        // Update dashboard statistics
+        function updateDashboard() {
+            const inventory = JSON.parse(localStorage.getItem('inventory'));
+            const log = JSON.parse(localStorage.getItem('activityLog'));
+            
+            document.getElementById('totalParts').textContent = inventory.reduce((sum, item) => sum + item.quantity, 0);
+            document.getElementById('checkedInParts').textContent = log.filter(entry => entry.action === 'Registered').length;
+            document.getElementById('checkedOutParts').textContent = log.filter(entry => entry.action === 'Checked Out').length;
+        }
+
+        // Initialize barcode scanner
+        function initScanner() {
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    target: document.querySelector("#interactive"),
+                    constraints: {
+                        facingMode: "environment"
+                    },
+                },
+                decoder: {
+                    readers: ["code_128_reader", "ean_reader", "ean_8_reader", "code_39_reader", "upc_reader"]
+                }
+            }, function(err) {
+                if (err) {
+                    console.error(err);
+                    return;
+                }
+                Quagga.start();
+            });
+
+            Quagga.onDetected(function(result) {
+                const code = result.codeResult.code;
+                if (code.startsWith('SBA-')) {
+                    const inventory = JSON.parse(localStorage.getItem('inventory'));
+                    const part = inventory.find(item => item.barcode === code);
+                    if (part) {
+                        document.getElementById('scanResult').style.display = 'block';
+                        document.getElementById('partDetails').innerHTML = `
+                            <p><strong>Part Name:</strong> ${part.partName}</p>
+                            <p><strong>Part Type:</strong> ${part.partType}</p>
+                            <p><strong>Quantity:</strong> ${part.quantity}</p>
+                            <p><strong>Registration Date:</strong> ${part.registrationDate}</p>
+                            <p><strong>Registered By:</strong> ${part.registeredBy}</p>
+                        `;
+                    }
+                }
+            });
+        }
+
+        // Form visibility functions
+        function navigateToPage(pageId) {
+            // Hide all form containers
+            document.querySelectorAll('.form-container').forEach(container => {
+                container.style.display = 'none';
+            });
+        
+            if (pageId === 'checkoutOptionsPage') {
+                document.getElementById('checkoutForm').style.display = 'block';
+            }
+        }
+
+        function showRegisterForm() {
+            document.getElementById('registerForm').style.display = 'block';
+        }
+
+        function showScannerView() {
+            document.getElementById('scannerView').style.display = 'block';
+        }
+
+        function calculateRequiredParts(event) {
+            event.preventDefault();
+            const size = document.getElementById('droneSize').value;
+            const type = document.getElementById('droneType').value;
+            
+            // Calculate required parts based on drone specifications
+            const partsList = document.getElementById('requiredPartsList');
+            partsList.innerHTML = `<h3>Required Parts for ${size} ${type} Drone:</h3>`;
+            partsList.style.display = 'block';
+        }
+
+        function checkoutParts(event) {
+            event.preventDefault();
+            const part = document.getElementById('checkoutPart').value;
+            const quantity = document.getElementById('checkoutQuantity').value;
+            const reason = document.getElementById('checkoutReason').value;
+            
+            // Process the checkout
+            console.log('Checking out:', { part, quantity, reason });
+            // Add your checkout logic here
+        }
+
+        // Initialize the page
+        // Sidebar functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuButton = document.querySelector('.menu-button');
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.overlay');
+            const closeSidebarButton = document.querySelector('.close-sidebar');
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+            }
+
+            menuButton.addEventListener('click', toggleSidebar);
+            closeSidebarButton.addEventListener('click', toggleSidebar);
+            overlay.addEventListener('click', toggleSidebar);
+
+            function showInventoryList() {
+                window.location.href = 'inventory.html';
+                toggleSidebar();
+            }
+
+            function showRecentActivities() {
+                window.location.href = 'activities.html';
+                toggleSidebar();
+            }
+
+            window.showInventoryList = showInventoryList;
+            window.showRecentActivities = showRecentActivities;
+
+            function goToHome() {
+                window.location.href = 'index.html';
+                toggleSidebar();
+            }
+            window.goToHome = goToHome;
+        });
+    </script>
+    </body>
+</html>

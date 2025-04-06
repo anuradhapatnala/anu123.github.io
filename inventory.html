@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory List</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root {
+            --sidebar-width: 250px;
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --background-color: #ecf0f1;
+            --text-color: #2c3e50;
+            --card-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            perspective: 1000px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            animation: containerFloat 1s ease-out forwards;
+        }
+
+        @keyframes containerFloat {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .inventory-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .inventory-table th,
+        .inventory-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .inventory-table th {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            font-weight: bold;
+        }
+
+        .inventory-table tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .quantity {
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+
+        .low-stock {
+            color: var(--accent-color);
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: var(--card-shadow);
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.15);
+        }
+
+        .back-button i {
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button onclick="window.location.href='index.html'" class="back-button">
+            <i class="fas fa-arrow-left"></i> Back to Home
+        </button>
+        <h1>Inventory List</h1>
+        <table class="inventory-table">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Part Name</th>
+                    <th>Quantity</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="inventoryTableBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Default inventory items
+            const defaultInventory = [
+                { category: 'Radar', name: '24GHz Alimeter Radar NRA24', quantity: 0 },
+                { category: 'Propellers', name: 'Propellers with Hub - CW', quantity: 0 },
+                { category: 'Propellers', name: 'Propellers with Hub - CCW', quantity: 0 },
+                { category: 'GPS', name: 'Here 3 – CAN GPS with M8P', quantity: 0 },
+                { category: 'Sensors', name: 'Mauch 076: HS-200-HV ,200A Sensor', quantity: 0 },
+                { category: 'FPV', name: 'SIYI MK15 Smart Agriculture FPV Combo (RKI-6212)', quantity: 0 },
+                { category: 'Pump', name: 'Hobbywing Brushless Water Pump 5L', quantity: 0 },
+                { category: 'Drone', name: 'Agriculture UAV Drone (RKI-3411)', quantity: 0 },
+                { category: 'AutoPilot', name: 'The Cube Orange Plus AutoPilot with ADS-B Carrier Board for UAV in India(Hex)', quantity: 0 },
+                { category: 'Computer', name: 'Raspberry Pi 3 Model B+', quantity: 0 },
+                { category: 'Sensors', name: 'RS PRO Flow Meter, 0.05 → 10 L/min Max', quantity: 0 },
+                { category: 'Radar', name: 'MR72 77GHZ Collision Avoidance Radar', quantity: 0 },
+                { category: 'Accessories', name: 'Plastic GPS stand Antenna Foldable Mount Holder', quantity: 0 },
+                { category: 'Tools', name: '2.1" RC CellMeter 7 Digital Battery Capacity Checker for NiCd / NiMH / LiPo / LiFe / Li-ion', quantity: 0 },
+                { category: 'Charger', name: 'SKYRC DUAL CHANNEL PC1080 LIPO BATTERY CHARGER', quantity: 0 }
+            ];
+
+            // Initialize inventory data
+            let inventory;
+            const storedInventory = localStorage.getItem('inventory');
+            
+            if (!storedInventory) {
+                // First time initialization
+                inventory = defaultInventory;
+                localStorage.setItem('inventory', JSON.stringify(defaultInventory));
+            } else {
+                // Load stored inventory and merge with default items
+                inventory = JSON.parse(storedInventory);
+                
+                // Ensure all default items exist in the inventory
+                defaultInventory.forEach(defaultItem => {
+                    const existingItem = inventory.find(item => item.name === defaultItem.name);
+                    if (!existingItem) {
+                        inventory.push({...defaultItem});
+                    }
+                });
+                
+                // Update localStorage with merged inventory
+                localStorage.setItem('inventory', JSON.stringify(inventory));
+            }
+            const tableBody = document.getElementById('inventoryTableBody');
+
+            // Group parts by category
+            const groupedParts = {};
+            inventory.forEach(item => {
+                if (!groupedParts[item.category]) {
+                    groupedParts[item.category] = [];
+                }
+                groupedParts[item.category].push(item);
+            });
+
+            // Clear existing table content
+            tableBody.innerHTML = '';
+            
+            // Populate table with inventory data
+            inventory.forEach(part => {
+                const row = document.createElement('tr');
+                const quantityClass = part.quantity === 0 ? 'quantity low-stock' : (part.quantity < 10 ? 'quantity low-stock' : 'quantity');
+                const status = part.quantity === 0 ? 'Out of Stock' : (part.quantity < 10 ? 'Low Stock' : 'In Stock');
+                const statusClass = part.quantity <= 10 ? 'low-stock' : '';
+
+                row.innerHTML = `
+                    <td>${part.category}</td>
+                    <td>${part.name}</td>
+                    <td class="${quantityClass}">${part.quantity}</td>
+                    <td class="${statusClass}">${status}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Order Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root {
+            --sidebar-width: 250px;
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --text-color: #2c3e50;
+            --border-color: #bdc3c7;
+            --background-color: #ecf0f1;
+            --card-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            perspective: 1000px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            animation: containerFloat 1s ease-out forwards;
+        }
+
+        @keyframes containerFloat {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 2.5em;
+        }
+
+        .form-section {
+            margin-bottom: 20px;
+        }
+
+        .form-section h2 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .parts-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .parts-table th, .parts-table td {
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            text-align: left;
+        }
+
+        .parts-table th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .add-row-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .add-row-btn:hover {
+            background-color: var(--primary-color);
+        }
+
+        .totals-section {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .comments {
+            grid-column: 1;
+        }
+
+        .calculations {
+            grid-column: 2;
+            min-width: 300px;
+        }
+
+        .calculations div {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .total {
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 1.2em;
+            border-top: 2px solid var(--border-color);
+            padding-top: 10px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .action-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .save-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .print-btn {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .back-btn {
+            background-color: var(--text-color);
+            color: white;
+        }
+
+        @media print {
+            .action-buttons {
+                display: none;
+            }
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PURCHASE ORDER</h1>
+        </div>
+
+        <form id="purchaseOrderForm">
+            <div class="form-section">
+                <div class="form-grid">
+                    <div>
+                        <div class="form-group">
+                            <label for="businessName">Business Name:</label>
+                            <input type="text" id="businessName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="address">Address:</label>
+                            <input type="text" id="address" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone:</label>
+                            <input type="tel" id="phone" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="fax">Fax:</label>
+                            <input type="tel" id="fax">
+                        </div>
+                        <div class="form-group">
+                            <label for="website">Website:</label>
+                            <input type="url" id="website">
+                        </div>
+                    </div>
+                    <div>
+                        <div class="form-group">
+                            <label for="date">Date:</label>
+                            <input type="date" id="date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="poNumber">PO #:</label>
+                            <input type="text" id="poNumber" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>VENDOR</h2>
+                <div class="form-group">
+                    <label for="vendorName">Name & Address:</label>
+                    <textarea id="vendorName" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="vendorContact">Contact:</label>
+                    <input type="text" id="vendorContact" required>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>SHIP TO</h2>
+                <div class="form-group">
+                    <label for="shipTo">Name & Address:</label>
+                    <textarea id="shipTo" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="shipContact">Contact:</label>
+                    <input type="text" id="shipContact" required>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="requisitioner">Requisitioner:</label>
+                        <input type="text" id="requisitioner" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="shipVia">Ship Via:</label>
+                        <input type="text" id="shipVia" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fob">F.O.B.:</label>
+                        <input type="text" id="fob" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="shippingTerms">Shipping Terms:</label>
+                        <input type="text" id="shippingTerms" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <table class="parts-table" id="partsTable">
+                    <thead>
+                        <tr>
+                            <th>ITEM #</th>
+                            <th>DESCRIPTION</th>
+                            <th>QTY</th>
+                            <th>UNIT PRICE</th>
+                            <th>TOTAL</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="partsTableBody">
+                    </tbody>
+                </table>
+                <button type="button" class="add-row-btn" onclick="addPartRow()">Add Part</button>
+
+                <div class="totals-section">
+                    <div class="comments">
+                        <label for="comments">Comments or Special Instructions:</label>
+                        <textarea id="comments" rows="4"></textarea>
+                    </div>
+                    <div class="calculations">
+                        <div>
+                            <span>Subtotal:</span>
+                            <span id="subtotal">$0.00</span>
+                        </div>
+                        <div>
+                            <span>Tax:</span>
+                            <span id="tax">$0.00</span>
+                        </div>
+                        <div>
+                            <span>Shipping:</span>
+                            <span id="shipping">$0.00</span>
+                        </div>
+                        <div>
+                            <span>Other:</span>
+                            <span id="other">$0.00</span>
+                        </div>
+                        <div class="total">
+                            <span>TOTAL:</span>
+                            <span id="total">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button type="submit" class="save-btn">Save Purchase Order</button>
+                <button type="button" class="print-btn" onclick="window.print()">Print</button>
+                <button type="button" class="back-btn" onclick="window.location.href='index.html'">Back to Home</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function addPartRow() {
+            const tbody = document.getElementById('partsTableBody');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td><input type="text" name="itemNo[]" required></td>
+                <td><input type="text" name="description[]" required></td>
+                <td><input type="number" name="quantity[]" min="1" required onchange="calculateRowTotal(this)"></td>
+                <td><input type="number" name="unitPrice[]" min="0" step="0.01" required onchange="calculateRowTotal(this)"></td>
+                <td class="row-total">$0.00</td>
+                <td><button type="button" onclick="this.closest('tr').remove(); calculateTotals();">Remove</button></td>
+            `;
+            tbody.appendChild(newRow);
+        }
+
+        function calculateRowTotal(input) {
+            const row = input.closest('tr');
+            const quantity = parseFloat(row.querySelector('input[name="quantity[]"]').value) || 0;
+            const unitPrice = parseFloat(row.querySelector('input[name="unitPrice[]"]').value) || 0;
+            const total = quantity * unitPrice;
+            row.querySelector('.row-total').textContent = `$${total.toFixed(2)}`;
+            calculateTotals();
+        }
+
+        function calculateTotals() {
+            const rows = document.querySelectorAll('#partsTableBody tr');
+            let subtotal = 0;
+
+            rows.forEach(row => {
+                const total = parseFloat(row.querySelector('.row-total').textContent.replace('$', '')) || 0;
+                subtotal += total;
+            });
+
+            const tax = subtotal * 0.1; // 10% tax rate
+            const shipping = subtotal * 0.05; // 5% shipping rate
+            const other = 0; // Additional fees if needed
+            const total = subtotal + tax + shipping + other;
+
+            document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
+            document.getElementById('tax').textContent = `$${tax.toFixed(2)}`;
+            document.getElementById('shipping').textContent = `$${shipping.toFixed(2)}`;
+            document.getElementById('other').textContent = `$${other.toFixed(2)}`;
+            document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+        }
+
+        // Add initial row
+        addPartRow();
+
+        // Form submission
+        document.getElementById('purchaseOrderForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Here you would typically send the form data to your backend
+            alert('Purchase Order saved successfully!');
+        });
+    </script>
+</body>
+</html>

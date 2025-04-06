@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuperBee - Create Drone</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --background-color: #ecf0f1;
+            --text-color: #2c3e50;
+            --card-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            perspective: 1000px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .form-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            margin-top: 20px;
+            transform-style: preserve-3d;
+            animation: containerFloat 1s ease-out forwards;
+        }
+
+        @keyframes containerFloat {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .form-container {
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            margin-right: 10px;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: 0.5s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        .secondary-button {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+        }
+
+        .secondary-button:hover {
+            background: linear-gradient(135deg, #7f8c8d, #95a5a6);
+        }
+
+        .parts-list {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+
+        #requiredPartsList {
+            margin-top: 20px;
+        }
+
+        #requiredPartsList h4 {
+            margin-top: 0;
+        }
+
+        #requiredPartsList ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #requiredPartsList table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        #requiredPartsList th, #requiredPartsList td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        #requiredPartsList th {
+            background-color: #f5f6fa;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        #requiredPartsList tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .action-button {
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: none;
+            background-color: var(--accent-color);
+            color: white;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .action-button:hover {
+            opacity: 0.9;
+        }
+
+        .superbee-id {
+            padding: 4px 8px;
+            background-color: #e8f0fe;
+            border-radius: 4px;
+            color: var(--primary-color);
+            font-family: monospace;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .scan-button {
+            padding: 4px 8px;
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .scan-button:hover {
+            opacity: 0.9;
+        }
+
+        #reader {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            display: none;
+        }
+
+        .scanning-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .scanning-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 640px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-container">
+            <h2>Create a New Drone</h2>
+            <form id="createDroneForm">
+            <div class="form-group">
+                <label for="droneSize">Drone Size:</label>
+                <select id="droneSize" required>
+                    <option value="">Select Size</option>
+                    <option value="small">Small (under 250g)</option>
+                    <option value="medium">Medium (250g - 1kg)</option>
+                    <option value="large">Large (over 1kg)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="droneType">Drone Type:</label>
+                <select id="droneType" required>
+                    <option value="">Select Type</option>
+                    <option value="racing">Racing Drone</option>
+                    <option value="photography">Photography Drone</option>
+                    <option value="surveillance">Surveillance Drone</option>
+                </select>
+            </div>
+            <button type="submit">Calculate Required Parts</button>
+            <div id="requiredPartsList" class="parts-list" style="display: none;"></div>
+            <button type="button" onclick="window.location.href='index.html'" class="secondary-button"><i class="fas fa-arrow-left" style="margin-right: 10px;"></i>Back to Home</button>
+        </form>
+    </div>
+
+    <script>
+        const dronePartsConfig = {
+            small: {
+                racing: [
+                    { name: 'Propellers with Hub - CW', quantity: 2 },
+                    { name: 'Propellers with Hub - CCW', quantity: 2 },
+                    { name: 'Here 3 – CAN GPS with M8P', quantity: 1 },
+                    { name: 'Mauch 076: HS-200-HV ,200A Sensor', quantity: 1 },
+                    { name: 'SIYI MK15 Smart Agriculture FPV Combo (RKI-6212)', quantity: 1 }
+                ],
+                photography: [
+                    { name: 'Propellers with Hub - CW', quantity: 2 },
+                    { name: 'Propellers with Hub - CCW', quantity: 2 },
+                    { name: 'Here 3 – CAN GPS with M8P', quantity: 1 },
+                    { name: 'Mauch 076: HS-200-HV ,200A Sensor', quantity: 1 },
+                    { name: 'SIYI MK15 Smart Agriculture FPV Combo (RKI-6212)', quantity: 1 },
+                    { name: 'Raspberry Pi 3 Model B+', quantity: 1 }
+                ],
+                surveillance: [
+                    { name: 'Propellers with Hub - CW', quantity: 2 },
+                    { name: 'Propellers with Hub - CCW', quantity: 2 },
+                    { name: 'Here 3 – CAN GPS with M8P', quantity: 1 },
+                    { name: 'Mauch 076: HS-200-HV ,200A Sensor', quantity: 1 },
+                    { name: 'MR72 77GHZ Collision Avoidance Radar', quantity: 1 }
+                ]
+            },
+            medium: {
+                racing: [
+                    { name: 'Agriculture UAV Drone (RKI-3411)', quantity: 1 },
+                    { name: 'Propellers with Hub - CW', quantity: 2 },
+                    { name: 'Propellers with Hub - CCW', quantity: 2 },
+                    { name: 'The Cube Orange Plus AutoPilot with ADS-B Carrier Board for UAV in India(Hex)', quantity: 1 },
+                    { name: 'SIYI MK15 Smart Agriculture FPV Combo (RKI-6212)', quantity: 1 }
+                ],
+                photography: [
+                    { name: 'Agriculture UAV Drone (RKI-3411)', quantity: 1 },
+                    { name: 'Propellers with Hub - CW', quantity: 2 },
+                    { name: 'Propellers with Hub - CCW', quantity: 2 },
+                    { name: 'The Cube Orange Plus AutoPilot with ADS-B Carrier Board for UAV in India(Hex)', quantity: 1 },
+                    { name: 'SIYI MK15 Smart Agriculture FPV Combo (RKI-6212)', quantity: 1 },
+                    { name: 'Hobbywing Brushless Water Pump 5L', quantity: 1 }
+                ],
+                surveillance: [
+                    { name: 'Agriculture UAV Drone (RKI-3411)', quantity: 1 },
+                    { name: 'Propellers with Hub - CW', quantity: 2 },
+                    { name: 'Propellers with Hub - CCW', quantity: 2 },
+                    { name: 'The Cube Orange Plus AutoPilot with ADS-B Carrier Board for UAV in India(Hex)', quantity: 1 },
+                    { name: 'MR72 77GHZ Collision Avoidance Radar', quantity: 1 }
+                ]
+            },
+            large: {
+                racing: [
+                    { name: 'Agriculture UAV Drone (RKI-3411)', quantity: 1 },
+                    { name: 'Propellers with Hub - CW', quantity: 2 },
+                    { name: 'Propellers with Hub - CCW', quantity: 2 },
+                    { name: 'The Cube Orange Plus AutoPilot with ADS-B Carrier Board for UAV in India(Hex)', quantity: 1 },
+                    { name: 'SIYI MK15 Smart Agriculture FPV Combo (RKI-6212)', quantity: 1 },
+                    { name: 'Hobbywing Brushless Water Pump 5L', quantity: 1 }
+                ],
+                photography: [
+                    { name: 'Agriculture UAV Drone (RKI-3411)', quantity: 1 },
+                    { name: 'Propellers with Hub - CW', quantity: 2 },
+                    { name: 'Propellers with Hub - CCW', quantity: 2 },
+                    { name: '24GHz Alimeter Radar NRA24', quantity: 1 },
+                    { name: 'The Cube Orange Plus AutoPilot with ADS-B Carrier Board for UAV in India(Hex)', quantity: 1 },
+                    { name: 'SIYI MK15 Smart Agriculture FPV Combo (RKI-6212)', quantity: 1 }
+                ],
+                surveillance: [
+                    { name: 'Agriculture UAV Drone (RKI-3411)', quantity: 1 },
+                    { name: 'Propellers with Hub - CW', quantity: 2 },
+                    { name: 'Propellers with Hub - CCW', quantity: 2 },
+                    { name: 'The Cube Orange Plus AutoPilot with ADS-B Carrier Board for UAV in India(Hex)', quantity: 1 },
+                    { name: 'MR72 77GHZ Collision Avoidance Radar', quantity: 1 },
+                    { name: 'RS PRO Flow Meter, 0.05 → 10 L/min Max', quantity: 1 }
+                ]
+            }
+        };
+
+        document.getElementById('createDroneForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const size = document.getElementById('droneSize').value;
+            const type = document.getElementById('droneType').value;
+            
+            if (size && type) {
+                const requiredParts = dronePartsConfig[size][type];
+                const partsList = document.getElementById('requiredPartsList');
+                const dateOut = '27-03-2025';
+                partsList.innerHTML = '<h4>Required Parts:</h4>' +
+                    '<table>' +
+                    '<thead><tr>' +
+                    '<th>PART NAME</th>' +
+                    '<th>QUANTITY</th>' +
+                    '<th>SUPERBEE ID</th>' +
+                    '<th>DATE OUT</th>' +
+                    '<th>RECEIVER</th>' +
+                    '<th>ACTIONS</th>' +
+                    '</tr></thead>' +
+                    '<tbody>' +
+                    requiredParts.map(part => {
+                        const superbeeId = '';
+                        return `<tr>
+                            <td>${part.name}</td>
+                            <td>${part.quantity}</td>
+                            <td>
+                                <span class="superbee-id" id="superbee-${part.name.replace(/\s+/g, '-').toLowerCase()}">${superbeeId}</span>
+                                <button type="button" class="scan-button" onclick="startScanning('${part.name.replace(/\s+/g, '-').toLowerCase()}')">Scan</button>
+                            </td>
+                            <td>${dateOut}</td>
+                            <td><input type="text" placeholder="Enter receiver name" style="width: 150px;"></td>
+                            <td><button class="action-button" onclick="alert('Part removed')">×</button></td>
+                        </tr>`;
+                    }).join('') +
+                    '</tbody>' +
+                    '</table>';
+
+                partsList.style.display = 'block';
+            }
+        });
+    </script>
+    <div class="scanning-overlay" id="scanningOverlay">
+        <div class="scanning-container">
+            <div id="reader"></div>
+            <button onclick="stopScanning()" class="secondary-button" style="margin-top: 10px;">Cancel</button>
+        </div>
+    </div>
+    <script>
+        let html5QrcodeScanner = null;
+        let currentScanTarget = '';
+
+        function startScanning(partId) {
+            currentScanTarget = partId;
+            document.getElementById('scanningOverlay').style.display = 'flex';
+            document.getElementById('reader').style.display = 'block';
+
+            if (!html5QrcodeScanner) {
+                html5QrcodeScanner = new Html5QrcodeScanner(
+                    "reader", { fps: 10, qrbox: 250 }
+                );
+            }
+
+            html5QrcodeScanner.render((decodedText) => {
+                document.getElementById(`superbee-${currentScanTarget}`).textContent = decodedText;
+                stopScanning();
+            });
+        }
+
+        function stopScanning() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear();
+            }
+            document.getElementById('scanningOverlay').style.display = 'none';
+            document.getElementById('reader').style.display = 'none';
+            currentScanTarget = '';
+        }
+    </script>
+</body>
+</html>

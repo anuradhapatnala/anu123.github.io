@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recent Activities</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root {
+            --sidebar-width: 250px;
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --background-color: #ecf0f1;
+            --text-color: #2c3e50;
+            --card-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            perspective: 1000px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            animation: containerFloat 1s ease-out forwards;
+        }
+
+        @keyframes containerFloat {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .activities-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .activities-table th,
+        .activities-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            cursor: default;
+        }
+
+        .activities-table th {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            font-weight: bold;
+        }
+
+        .activities-table tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .activity-type {
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .activity-type.registration {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .activity-type.checkout {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: var(--card-shadow);
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.15);
+        }
+
+        .back-button i {
+            margin-right: 8px;
+        }
+
+        .timestamp {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button onclick="window.location.href='index.html'" class="back-button">
+            <i class="fas fa-arrow-left"></i> Back to Home
+        </button>
+        <h1>Recent Activities</h1>
+        <table class="activities-table">
+            <thead>
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Action</th>
+                    <th>Part Name</th>
+                    <th>Quantity</th>
+                    <th>User</th>
+                </tr>
+            </thead>
+            <tbody id="activitiesTableBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get activities data from localStorage
+            const activities = JSON.parse(localStorage.getItem('activities')) || [];
+            const tableBody = document.getElementById('activitiesTableBody');
+
+            // Sort activities by timestamp in descending order (most recent first)
+            activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            // Populate table with activities data
+            activities.forEach(activity => {
+                const row = document.createElement('tr');
+                const timestamp = new Date(activity.timestamp);
+                const formattedDate = timestamp.toLocaleString();
+
+                row.innerHTML = `
+                    <td class="timestamp">${formattedDate}</td>
+                    <td>
+                        <span class="activity-type ${activity.type.toLowerCase()}">
+                            ${activity.type}
+                        </span>
+                    </td>
+                    <td>${activity.category}</td>
+                    <td>${activity.partName}</td>
+                    <td>${activity.quantity}</td>
+                    <td>${activity.user || 'System'}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        });
+    </script>
+</body>
+</html>

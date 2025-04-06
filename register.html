@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuperBee - Register New Parts</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --background-color: #ecf0f1;
+            --text-color: #2c3e50;
+            --card-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            perspective: 1000px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .form-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            margin-top: 20px;
+            transform-style: preserve-3d;
+            animation: containerFloat 1s ease-out forwards;
+        }
+
+        @keyframes containerFloat {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            margin-right: 10px;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: 0.5s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        .secondary-button {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+        }
+
+        .secondary-button:hover {
+            background: linear-gradient(135deg, #7f8c8d, #95a5a6);
+        }
+
+        .barcode-container {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        #barcodeDisplay {
+            max-width: 100%;
+            height: auto;
+        }
+
+        #barcodeText {
+            margin-top: 10px;
+            font-family: monospace;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-container">
+            <h2>Register New Part</h2>
+            <form id="partRegistrationForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="purchaseOrder">Upload Invoice:</label>
+                    <input type="file" id="purchaseOrder" accept=".pdf,.doc,.docx,.xls,.xlsx" style="border: none; padding-left: 0;">
+                </div>
+                <div class="form-group">
+                    <label for="serialnumber">Seiral Number:</label>
+                    <input type="number" id="partName" required>
+                </div>
+                <div class="form-group">
+                    <label for="partType">Part Type:</label>
+                    <select id="partType" required>
+                        <option value="">Select Type</option>
+                        <option value="motor">Motor</option>
+                        <option value="frame">Frame</option>
+                        <option value="battery">Battery</option>
+                        <option value="controller">Controller</option>
+                        <option value="propeller">Propeller</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="quantity">Quantity:</label>
+                    <input type="number" id="quantity" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="invoiceDate">Invoice Date:</label>
+                    <input type="date" id="invoiceDate" required>
+                </div>
+                <div class="form-group">
+                    <label>Barcode:</label>
+                    <div class="barcode-container">
+                        <svg id="barcodeDisplay"></svg>
+                        <div id="barcodeText"></div>
+                    </div>
+                </div>
+                <button type="submit">Register Part</button>
+                <button type="button" onclick="checkMissingProducts()" class="secondary-button" style="background: linear-gradient(135deg, var(--accent-color), #c0392b);">Check Missing Products</button>
+                <button type="button" onclick="printBarcode()" class="secondary-button">Print Barcode</button>
+                <button type="button" onclick="window.location.href='index.html'" class="secondary-button"><i class="fas fa-arrow-left" style="margin-right: 10px;"></i>Back to Home</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script>
+        document.getElementById('partRegistrationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Get form data including file
+            const partName = document.getElementById('partName').value;
+            const partType = document.getElementById('partType').value;
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const invoiceNumber = document.getElementById('invoiceNumber').value;
+            const invoiceDate = document.getElementById('invoiceDate').value;
+            const purchaseOrder = document.getElementById('purchaseOrder').files[0];
+
+            // Update inventory in localStorage
+            let inventory = JSON.parse(localStorage.getItem('inventory') || '[]');
+            const existingPartIndex = inventory.findIndex(item => item.name === partName);
+
+            if (existingPartIndex !== -1) {
+                // Update existing part quantity
+                inventory[existingPartIndex].quantity = (inventory[existingPartIndex].quantity || 0) + quantity;
+            } else {
+                // Find matching default part
+                const defaultInventory = [
+                    { category: 'Radar', name: '24GHz Alimeter Radar NRA24', quantity: 0 },
+                    { category: 'Propellers', name: 'Propellers with Hub - CW', quantity: 0 },
+                    { category: 'Propellers', name: 'Propellers with Hub - CCW', quantity: 0 },
+                    { category: 'GPS', name: 'Here 3 – CAN GPS with M8P', quantity: 0 },
+                    { category: 'Sensors', name: 'Mauch 076: HS-200-HV ,200A Sensor', quantity: 0 },
+                    { category: 'FPV', name: 'SIYI MK15 Smart Agriculture FPV Combo (RKI-6212)', quantity: 0 },
+                    { category: 'Pump', name: 'Hobbywing Brushless Water Pump 5L', quantity: 0 },
+                    { category: 'Drone', name: 'Agriculture UAV Drone (RKI-3411)', quantity: 0 },
+                    { category: 'AutoPilot', name: 'The Cube Orange Plus AutoPilot with ADS-B Carrier Board for UAV in India(Hex)', quantity: 0 },
+                    { category: 'Computer', name: 'Raspberry Pi 3 Model B+', quantity: 0 },
+                    { category: 'Sensors', name: 'RS PRO Flow Meter, 0.05 → 10 L/min Max', quantity: 0 },
+                    { category: 'Radar', name: 'MR72 77GHZ Collision Avoidance Radar', quantity: 0 },
+                    { category: 'Accessories', name: 'Plastic GPS stand Antenna Foldable Mount Holder', quantity: 0 },
+                    { category: 'Tools', name: '2.1" RC CellMeter 7 Digital Battery Capacity Checker for NiCd / NiMH / LiPo / LiFe / Li-ion', quantity: 0 },
+                    { category: 'Charger', name: 'SKYRC DUAL CHANNEL PC1080 LIPO BATTERY CHARGER', quantity: 0 }
+                ];
+                const defaultPart = defaultInventory.find(item => item.name === partName);
+                
+                // Add new part with proper category from default inventory or user input
+                inventory.push({
+                    category: defaultPart ? defaultPart.category : partType,
+                    name: partName,
+                    quantity: quantity
+                });
+            }
+
+            localStorage.setItem('inventory', JSON.stringify(inventory));
+            
+            // Refresh the inventory display if we're on the inventory page
+            const inventoryTableBody = document.getElementById('inventoryTableBody');
+            if (inventoryTableBody) {
+                location.reload();
+            }
+
+            // Log registration details
+            console.log('Registering part with purchase order:', {
+                partName,
+                partType,
+                quantity,
+                invoiceNumber,
+                invoiceDate,
+                purchaseOrder: purchaseOrder ? purchaseOrder.name : 'No file uploaded'
+            });
+
+            // Clear form
+            e.target.reset();
+            alert('Part registered successfully!');
+
+
+            // Generate barcode
+            const barcodeValue = generateBarcodeValue();
+            JsBarcode("#barcodeDisplay", barcodeValue, {
+                format: "CODE128",
+                width: 2,
+                height: 100,
+                displayValue: true
+            });
+            document.getElementById('barcodeText').textContent = barcodeValue;
+        });
+
+        function generateBarcodeValue() {
+            return 'PART' + Date.now().toString().slice(-8);
+        }
+
+        function printBarcode() {
+            window.print();
+        }
+
+        function checkMissingProducts() {
+            // Get current form data
+            const partType = document.getElementById('partType').value;
+            const quantity = document.getElementById('quantity').value;
+
+            // Here you would typically check against your inventory system
+            // For now, we'll just show a demo alert
+            alert(`Checking inventory for ${quantity} units of ${partType}...\nThis feature will compare against your inventory system.`);
+        }
+    </script>
+</body>
+</html>
